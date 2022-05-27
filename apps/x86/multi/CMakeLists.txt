@@ -16,10 +16,14 @@ include(${CAMKES_VM_LINUX_HELPERS_PATH})
 set(NumberVMs 3)
 MATH(EXPR NumberVMsLess1 "${NumberVMs}-1")
 
+# Retrieve Init0 extra src files
+file(GLOB init0_extra src/cross_vm_connections_vm0.c)
+file(GLOB init1_extra src/cross_vm_connections_vm1.c)
+
 # Declare VM component: Init
-foreach(i RANGE ${NumberVMsLess1})
-    DeclareCAmkESVM("Init${i}")
-endforeach()
+DeclareCAmkESVM(Init0 EXTRA_SOURCES ${init0_extra})
+DeclareCAmkESVM(Init1 EXTRA_SOURCES ${init1_extra})
+DeclareCAmkESVM(Init2)
 
 DeclareCamkesComponent(virtqueueinit)
 
