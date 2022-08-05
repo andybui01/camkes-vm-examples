@@ -8,17 +8,23 @@ import <VM/vm.camkes>;
 
 #include <configurations/vm.h>
 
-#define VM_GUEST_CMDLINE "earlyprintk=ttyS0,115200 console=ttyS0,115200 i8042.nokbd=y i8042.nomux=y \
+#define VM_GUEST_CMDLINE "earlyprintk=hvc0 console=hvc0 i8042.nokbd=y i8042.nomux=y \
 i8042.noaux=y io_delay=udelay noisapnp pci=nomsi debug root=/dev/mem"
 
 component Init0 {
     VM_INIT_DEF()
+    maybe uses VirtQueueDev recv1;
+    maybe uses VirtQueueDrv send1;
 }
 
 assembly {
     composition {
         VM_COMPOSITION_DEF()
         VM_PER_VM_COMP_DEF(0)
+
+        component VirtQueueInit vm0_con;
+        connection seL4VirtQueues vm0_con_conn(to vm0_con.init, from vm0.recv1, from vm0.send1, from serial.recv1, from serial.send1);
+        connection seL4GlobalAsynchCallback serial_global_callback(from serial.self, to serial.serial_wait);
     }
 
     configuration {
@@ -33,5 +39,36 @@ assembly {
         vm0.kernel_relocs = "bzimage";
         vm0.initrd_image = "rootfs.cpio";
         vm0.iospace_domain = 0x0f;
+        vm0.init_cons = [
+            {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
+            {"init":"make_virtio_con_driver_dummy", "badge":"send1_notification_badge()", "irq":"handle_serial_console"},
+            {"init":"make_virtio_con"}
+        ];
+
+        /* Indexes correspond to port numbers in the VM layout arrays */
+        vm0.serial_layout = [
+            {"recv_id": 0, "send_id": 1}
+        ];
+
+        /* Indexes correspond to client ids in the serial layout array */
+        serial.serial_layout = [
+            {"recv_id": 0, "send_id": 1}
+        ];
+
+        /* VM0 virtqueue config */
+        vm0.recv1_id = 0;
+        vm0.recv1_shmem_size = 0x2000;
+        vm0.send1_id = 1;
+        vm0.send1_shmem_size = 0x2000;
+
+        /* SerialServer virtqueue config */
+        serial.recv1_id = 0;
+        serial.recv1_shmem_size = 0x2000;
+        serial.send1_id = 1;
+        serial.send1_shmem_size = 0x2000;
+
+        /* Virtqueue Topology */
+        vm0_con.init_topology = [{ "drv" : "vm0.send1", "dev" : "serial.recv1"},
+                                 { "drv" : "serial.send1", "dev" : "vm0.recv1"}];
     }
 }

@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 #
 
-# set -e
+set -e
 
-# ifconfig eth0 up
-# udhcpc -i eth0
+ifconfig eth0 up
+udhcpc -i eth0

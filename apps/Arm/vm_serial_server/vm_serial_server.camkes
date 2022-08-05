@@ -3,33 +3,79 @@
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
+#include <configurations/vm.h>
 
 import <std_connector.camkes>;
+import <global-connectors.camkes>;
+import <seL4VMDTBPassthrough.idl4>;
+import <FileServerInterface.camkes>;
+import <FileServer/FileServer.camkes>;
+import <SerialServer/SerialServer.camkes>;
+import <TimeServer/TimeServer.camkes>;
 import <vm-connectors.camkes>;
-import <VM_Arm/vm_common.camkes>;
 import <devices.camkes>;
+
+component VM {
+    VM_INIT_DEF()
+    maybe uses VirtQueueDev recv1;
+    maybe uses VirtQueueDrv send1;
+}
 
 assembly {
     composition {
+        /* Boilerplate composition settings */
+        VM_GENERAL_COMPOSITION_DEF()
+
+        /* Other standard VM defintions */
+        VM_COMPOSITION_DEF(0)
+
         /* Connect all the components to use the serial server */
         component SerialServer serial;
         component TimeServer time_server;
-        connection seL4SerialServer serial_vm(from vm.batch, to serial.processed_batch);
-        connection seL4SerialServer serial_input(from vm.serial_getchar, to serial.getchar);
+
+        component VirtQueueInit vm0_con;
+        connection seL4VirtQueues vm0_con_conn(to vm0_con.init, from vm0.recv1, from vm0.send1, from serial.recv1, from serial.send1);
+        connection seL4GlobalAsynchCallback serial_global_callback(from serial.self, to serial.serial_wait);
+        
         connection seL4TimeServer serialserver_timer(from serial.timeout, to time_server.the_timer);
-        connection seL4VMDTBPassthrough vm_dtb(from vm.dtb_self, to vm.dtb);
+        connection seL4VMDTBPassthrough vm0_dtb(from vm0.dtb_self, to vm0.dtb);
     }
     configuration {
-        vm.num_extra_frame_caps = 0;
-        vm.extra_frame_map_address = 0;
+        VM_GENERAL_CONFIGURATION_DEF()
 
-        time_server.timers_per_client = 1;
-        /* Put the entire time server at the highest priority */
-        time_server.priority = 255;
-        time_server.simple = true;
+        /* Time server config */
+        VM_VIRTUAL_SERIAL_GENERAL_CONFIGURATION_DEF()
 
-        vm.serial_getchar_shmem_size = 0x1000;
-        vm.batch_shmem_size = 0x1000;
+        VM_CONFIGURATION_DEF(0)
+        vm0.num_extra_frame_caps = 0;
+        vm0.extra_frame_map_address = 0;
+        vm0.cnode_size_bits = 23;
+        vm0.simple_untyped24_pool = 12;
 
+        /* Indexes correspond to port numbers in the VM layout arrays */
+        vm0.serial_layout = [
+            {"recv_id": 0, "send_id": 1}
+        ];
+
+        /* Indexes correspond to client ids in the serial layout array */
+        serial.serial_layout = [
+            {"recv_id": 0, "send_id": 1}
+        ];
+
+        /* VM0 virtqueue config */
+        vm0.recv1_id = 0;
+        vm0.recv1_shmem_size = 0x2000;
+        vm0.send1_id = 1;
+        vm0.send1_shmem_size = 0x2000;
+
+        /* SerialServer virtqueue config */
+        serial.recv1_id = 0;
+        serial.recv1_shmem_size = 0x2000;
+        serial.send1_id = 1;
+        serial.send1_shmem_size = 0x2000;
+
+        /* Virtqueue Topology */
+        vm0_con.init_topology = [{ "drv" : "vm0.send1", "dev" : "serial.recv1"},
+                                 { "drv" : "serial.send1", "dev" : "vm0.recv1"}];
     }
 }
