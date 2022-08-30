@@ -57,6 +57,8 @@ component Init0 {
     VM_CONNECTION_COMPONENT_DEF(0,topology_def)
     maybe uses VirtQueueDev recv1;
     maybe uses VirtQueueDrv send1;
+    maybe uses VirtQueueDev recv2;
+    maybe uses VirtQueueDrv send2;
 }
 
 component Init1 {
@@ -66,8 +68,8 @@ component Init1 {
     VM_INIT_DEF()
     VM_INIT_SATA()
     VM_CONNECTION_COMPONENT_DEF(1,topology_def)
-    maybe uses VirtQueueDev recv1;
-    maybe uses VirtQueueDrv send1;
+    maybe uses VirtQueueDev recv2;
+    maybe uses VirtQueueDrv send2;
 }
 
 component Init2 {
@@ -125,6 +127,9 @@ assembly {
         component VirtQueueInit vm1_con;
         connection seL4VirtQueues vm1_con_conn(to vm1_con.init, from vm1.recv1, from vm1.send1, from serial.recv2, from serial.send2);
 
+        component VirtQueueInit vm0_vm1;
+        connection seL4VirtQueues vm1_con_conn(to vm0_vm1.init, from vm1.recv2, from vm1.send2, from vm0.recv2, from vm0.send2);
+
         component VirtQueueInit vm2_con;
         connection seL4VirtQueues vm2_con_conn(to vm2_con.init, from vm2.recv1, from vm2.send1, from serial.recv3, from serial.send3);
 
@@ -169,7 +174,7 @@ assembly {
             VM_CONNECTION_INIT_HANDLER(0,topology_def),
             {"init":"make_virtio_blk"},
             {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"send1_notification_badge()", "irq":"handle_serial_console"},
+            {"init":"make_virtio_con_driver_dummy", "badge":"recv2_notification_badge()", "irq":"handle_serial_console"},
             {"init":"make_virtio_con"}
         ];
 
@@ -190,7 +195,7 @@ assembly {
             VM_CONNECTION_INIT_HANDLER(1,topology_def),
             {"init":"make_virtio_blk"},
             {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"send1_notification_badge()", "irq":"handle_serial_console"},
+            {"init":"make_virtio_con_driver_dummy", "badge":"recv2_notification_badge()", "irq":"handle_serial_console"},
             {"init":"make_virtio_con"}
         ];
 
@@ -211,7 +216,6 @@ assembly {
             VM_CONNECTION_INIT_HANDLER(2,topology_def),
             {"init":"make_virtio_blk"},
             {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"send1_notification_badge()", "irq":"handle_serial_console"},
             {"init":"make_virtio_con"}
         ];
 
@@ -230,7 +234,6 @@ assembly {
             VM_CONNECTION_INIT_HANDLER(3,topology_def),
             {"init":"make_virtio_blk"},
             {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"send1_notification_badge()", "irq":"handle_serial_console"},
             {"init":"make_virtio_con"}
         ];
 
@@ -256,11 +259,13 @@ assembly {
 
         /* Indexes correspond to port numbers in the VM layout arrays */
         vm0.serial_layout = [
-            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1}
+            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
+            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 2, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 3}
         ];
 
         vm1.serial_layout = [
-            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1}
+            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
+            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 2, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 3}
         ];
 
         vm2.serial_layout = [
@@ -281,45 +286,53 @@ assembly {
 
         /* VM0 virtqueue config */
         vm0.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm0.recv1_shmem_size = 0x2000;
+        vm0.recv1_shmem_size = 0x1000;
         vm0.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm0.send1_shmem_size = 0x2000;
+        vm0.send1_shmem_size = 0x1000;
+        vm0.recv2_id = VM_VIRTIOCON_VIRTQ_ID_START + 2;
+        vm0.recv2_shmem_size = 0x1000;
+        vm0.send2_id = VM_VIRTIOCON_VIRTQ_ID_START + 3;
+        vm0.send2_shmem_size = 0x1000;
 
         /* VM1 virtqueue config */
         vm1.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm1.recv1_shmem_size = 0x2000;
+        vm1.recv1_shmem_size = 0x1000;
         vm1.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm1.send1_shmem_size = 0x2000;
+        vm1.send1_shmem_size = 0x1000;
+        vm1.recv2_id = VM_VIRTIOCON_VIRTQ_ID_START + 2;
+        vm1.recv2_shmem_size = 0x1000;
+        vm1.send2_id = VM_VIRTIOCON_VIRTQ_ID_START + 3;
+        vm1.send2_shmem_size = 0x1000;
 
         /* VM2 virtqueue config */
         vm2.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm2.recv1_shmem_size = 0x2000;
+        vm2.recv1_shmem_size = 0x1000;
         vm2.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm2.send1_shmem_size = 0x2000;
+        vm2.send1_shmem_size = 0x1000;
 
         /* VM3 virtqueue config */
         vm3.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm3.recv1_shmem_size = 0x2000;
+        vm3.recv1_shmem_size = 0x1000;
         vm3.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm3.send1_shmem_size = 0x2000;
+        vm3.send1_shmem_size = 0x1000;
 
         /* SerialServer virtqueue config */
         serial.recv1_id = 0;
-        serial.recv1_shmem_size = 0x2000;
+        serial.recv1_shmem_size = 0x1000;
         serial.send1_id = 1;
-        serial.send1_shmem_size = 0x2000;
+        serial.send1_shmem_size = 0x1000;
         serial.recv2_id = 2;
-        serial.recv2_shmem_size = 0x2000;
+        serial.recv2_shmem_size = 0x1000;
         serial.send2_id = 3;
-        serial.send2_shmem_size = 0x2000;
+        serial.send2_shmem_size = 0x1000;
         serial.recv3_id = 4;
-        serial.recv3_shmem_size = 0x2000;
+        serial.recv3_shmem_size = 0x1000;
         serial.send3_id = 5;
-        serial.send3_shmem_size = 0x2000;
+        serial.send3_shmem_size = 0x1000;
         serial.recv4_id = 6;
-        serial.recv4_shmem_size = 0x2000;
+        serial.recv4_shmem_size = 0x1000;
         serial.send4_id = 7;
-        serial.send4_shmem_size = 0x2000;
+        serial.send4_shmem_size = 0x1000;
 
         /* Virtqueue Topology */
         vm0_con.init_topology = [{ "drv" : "vm0.send1", "dev" : "serial.recv1"},
@@ -333,5 +346,8 @@ assembly {
 
         vm3_con.init_topology = [{ "drv" : "vm3.send1", "dev" : "serial.recv4"},
                                  { "drv" : "serial.send4", "dev" : "vm3.recv1"}];
+
+        vm0_vm1.init_topology = [{ "drv" : "vm0.send2", "dev" : "vm1.recv2"},
+                                 { "drv" : "vm1.send2", "dev" : "vm0.recv2"}];
     }
 }
