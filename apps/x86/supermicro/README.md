@@ -12,10 +12,11 @@ for a general set up guide.
 
 ## Intro
 This is a sample configuration for a Supermicro SYS-5019D-FN8TP
-It sets up 4 32-bit Linux virtual machines (VMs).  VM0 has passthrough ethernet for LAN0
+It sets up 4 32-bit Linux virtual machines (VMs).  VM0 has passthrough
+ethernet for LAN0 
 (PCI device 66:0:0); the other VMs have no passthrough devices.
 
-Serial console on port COM2 (the one redirected to IPMI
+The serial console on port COM2 (the one redirected to IPMI
 Serial-over-LAN by the machine's firmware) provides debug output, and
 redirection to the VM consoles on their port /dev/ttyS0 at 115200
 baud.
@@ -31,7 +32,8 @@ The root file system is a simple buildroot; login/password root/root
 
 ## Config
 
-The passthrough device configuration options in `supermicro.camkes` may need to be changed. These include:
+The passthrough device configuration options in `supermicro.camkes`
+may need to be changed. These include:
   - Physical address of the base of the memory-mapped device and I/O ports
   - Size of the memory region
   - IRQ-related information (PCI, MSI, etc)
@@ -93,7 +95,7 @@ buggy.  Right now the VM does not get any interrupts.
 This is also true of anything plugged into the only PCI slot.
 
 The SATA server currently polls for end of operation.  On a fast SSD
-this isn;t that much of an issue; but should be fixed.
+this isn't that much of an issue; but should be fixed.
 
 
 These PRs are currently outstanding:
@@ -104,9 +106,14 @@ These PRs are currently outstanding:
    the supermicro.
    https://github.com/seL4/camkes-vm-examples/pull/27 the supermicro
    config itself (where this file is at the moment)
-   https://github.com/seL4/util_libs/pull/132 use brute force scan for
-   PCI devices.
    
 These features do not yet have a PR up:
   -- virtIO-socket
   -- virtIO-console between VMs
+
+# Acknowledgements
+
+The work to create this example was funded through the [NLnet
+Foundation](nlnet.nl).  virtIO socket and console was co-funded by
+TII.  virtIO-block and the sataserver was work originally done by
+Dornerworks; the work to merge it was funded by NLnet.
