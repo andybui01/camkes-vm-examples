@@ -40,7 +40,7 @@ AddExternalProjFilesToOverlay(
     overlay
     "usr/bin"
     FILES
-    vm0
+    vm_host
 )
 
 AddExternalProjFilesToOverlay(
@@ -49,7 +49,7 @@ AddExternalProjFilesToOverlay(
     overlay
     "usr/bin"
     FILES
-    vm1
+    vm_client
 )
 
 set(NumberVMs 4)
