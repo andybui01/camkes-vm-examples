@@ -289,15 +289,15 @@ assembly {
 
         /* VM2 virtqueue config */
         vm2.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
-        vm2.recv1_shmem_size = 0x1000;
+        vm2.recv1_shmem_size = 0x2000;
         vm2.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
-        vm2.send1_shmem_size = 0x1000;
+        vm2.send1_shmem_size = 0x2000;
 
         /* VM3 virtqueue config */
         vm3.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
-        vm3.recv1_shmem_size = 0x1000;
+        vm3.recv1_shmem_size = 0x2000;
         vm3.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
-        vm3.send1_shmem_size = 0x1000;
+        vm3.send1_shmem_size = 0x2000;
 
 
         /* Virtqueue Topology */
