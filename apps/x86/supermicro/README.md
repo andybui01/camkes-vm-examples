@@ -51,12 +51,16 @@ ninja
 
 ## Testing
 
-Some tips for testing the Virtio Net and the passthrough ethernet.
+Some tips for testing the virtIO net and the passthrough ethernet.
 
 1. Switching the serial port between different VMs: press `Return`,
    then `@`,  then the index number of the VM you want to switch to.
 
-2. Testing Virtio Net
+   NOTE: Doing `@N` in the serial console doesn't mean you switch to vm N.
+   To check what VM the console is currently connected to, run `ipaddr` in linux
+   and compare it to the mac address in `supermicro.camkes`.
+
+2. Testing virtIO net
 ```
 # on vm0
 ifconfig eth0 192.168.1.1
@@ -80,6 +84,24 @@ are available as `/dev/vda1` in each of vm0, vm1, and vm2.
 
 The sataserver code currently allows only primary MBR partitions, so
 you are restricted to 4 max per disc.
+
+5. virtIO console multiplexer
+```
+# on vm1
+cat /dev/hvc0
+
+# on vm0
+echo "Hello vm1, I am vm0" > /dev/hvc0
+```
+
+6. virtIO vsock
+```
+# on vm3
+vm_host
+
+# on vm4
+vm_client
+```
 
 ## ISSUES
 
@@ -107,9 +129,9 @@ These PRs are currently outstanding:
    https://github.com/seL4/camkes-vm-examples/pull/27 the supermicro
    config itself (where this file is at the moment)
    
-These features do not yet have a PR up:
+These features have a PR up and are ready to be merged:
   -- virtIO-socket
-  -- virtIO-console between VMs
+  -- virtIO-console
 
 # Acknowledgements
 
