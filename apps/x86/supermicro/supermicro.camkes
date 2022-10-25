@@ -31,6 +31,9 @@ import <VirtQueue/VirtQueue.camkes>;
  */
 
 #define VM_GUEST_CMDLINE "earlyprintk=ttyS0,115200 console=hvc console=ttyS0,115200 root=/dev/mem i8042.nokbd=iy \
+i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp apic=debug acpi_rsdp=0xf05b0"
+
+#define VM_GUEST_CMDLINE_SHUTUP "root=/dev/mem i8042.nokbd=iy \
 i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp pci=nomsi"
 
 #define VM0_topology_def(f) f(0,1,2,3)
@@ -186,7 +189,7 @@ assembly {
         vm1.simple_untyped25_pool = 95;
         vm1.heap_size = 0x2000000;
         vm1.guest_ram_mb = 1900;
-        vm1.kernel_cmdline = VM_GUEST_CMDLINE;
+        vm1.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
         vm1.kernel_image = "bzimage";
         vm1.kernel_relocs = "bzimage";
         vm1.initrd_image = "rootfs.cpio";
@@ -206,7 +209,7 @@ assembly {
         vm2.simple_untyped25_pool = 95;
         vm2.heap_size = 0x2000000;
         vm2.guest_ram_mb = 1900;
-        vm2.kernel_cmdline = VM_GUEST_CMDLINE;
+        vm2.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
         vm2.kernel_image = "bzimage";
         vm2.kernel_relocs = "bzimage";
         vm2.initrd_image = "rootfs.cpio";
@@ -232,7 +235,7 @@ assembly {
         vm3.simple_untyped25_pool = 95;
         vm3.heap_size = 0x2000000;
         vm3.guest_ram_mb = 1900;
-        vm3.kernel_cmdline = VM_GUEST_CMDLINE;
+        vm3.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
         vm3.kernel_image = "bzimage";
         vm3.kernel_relocs = "bzimage";
         vm3.initrd_image = "rootfs.cpio";
@@ -259,7 +262,7 @@ assembly {
         vm0.pci_devices = [
             {
                 "name":"Ethernet-vm0",
-                "bus":0x66, "dev":0, "fun":0,
+                "bus":0x66, "dev":0x0, "fun":0x0,
                 "irq":"Ethernet-vm0-Irq",
                 "memory":[
                     {"paddr":0xe0d60000, "size":0x20000, "page_bits":12},
@@ -268,7 +271,24 @@ assembly {
             },
         ];
         vm0.vm_irqs = [
-            {"name":"Ethernet-vm0-Irq", "ioapic":1, "source":5, "level_trig":1, "active_low":1, "dest":11},
+            /**
+             * @andyb: 
+             * - Attempt to use MSIs, wtf is handle?
+             * - What is the physical vector we are supposed to program...
+             */
+
+            /*
+            ip link set up dev eth1
+            udhcpc -i eth1
+            */
+
+            // {"name":"Ethernet-vm0-Irq", "ioapic":1, "source":5, "level_trig":1, "active_low":1, "dest":11},
+            {
+                "name":"Ethernet-vm0-Irq",
+                "pci_bus":0x66, "pci_dev":0x0, "pci_fun":0x0, /* @andyb: find a way to avoid duplicating pci_devices */
+                "dest":16, /** @andyb: linux decides the vector is 16, 0-15 is guest VM PIC, 16 onwards is LAPIC*/
+                "handle":0
+            },
         ];
 
         /* Indexes correspond to port numbers in the VM layout arrays */
