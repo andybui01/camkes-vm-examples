@@ -31,7 +31,7 @@ import <VirtQueue/VirtQueue.camkes>;
  */
 
 #define VM_GUEST_CMDLINE "earlyprintk=ttyS0,115200 console=hvc console=ttyS0,115200 root=/dev/mem i8042.nokbd=iy \
-i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp apic=debug acpi_rsdp=0xf05b0"
+i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp apic=debug loglevel=7 lapic=notscdeadline noapic"
 
 #define VM_GUEST_CMDLINE_SHUTUP "root=/dev/mem i8042.nokbd=iy \
 i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp pci=nomsi"
@@ -63,55 +63,55 @@ i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp pci=nomsi"
 #define VM_VIRTIOCON_VIRTQ_ID_START 90
 
 component Init0 {
-    dataport Buf(SHARED_BUFSIZE) dp01;
-    dataport Buf(SHARED_BUFSIZE) dp02;
-    dataport Buf(SHARED_BUFSIZE) dp03;
+    // dataport Buf(SHARED_BUFSIZE) dp01;
+    // dataport Buf(SHARED_BUFSIZE) dp02;
+    // dataport Buf(SHARED_BUFSIZE) dp03;
     VM_INIT_DEF()
     VM_INIT_SATA()
-    VM_CONNECTION_COMPONENT_DEF(0,topology_def)
+    // VM_CONNECTION_COMPONENT_DEF(0,topology_def)
 
-    /* virtio con multiplexer */
-    maybe uses VirtQueueDev recv1;
-    maybe uses VirtQueueDrv send1;
+    // /* virtio con multiplexer */
+    // maybe uses VirtQueueDev recv1;
+    // maybe uses VirtQueueDrv send1;
 }
 
-component Init1 {
-    dataport Buf(SHARED_BUFSIZE) dp10;
-    dataport Buf(SHARED_BUFSIZE) dp12;
-    dataport Buf(SHARED_BUFSIZE) dp13;
-    VM_INIT_DEF()
-    VM_INIT_SATA()
-    VM_CONNECTION_COMPONENT_DEF(1,topology_def)
+// component Init1 {
+//     dataport Buf(SHARED_BUFSIZE) dp10;
+//     dataport Buf(SHARED_BUFSIZE) dp12;
+//     dataport Buf(SHARED_BUFSIZE) dp13;
+//     VM_INIT_DEF()
+//     VM_INIT_SATA()
+//     VM_CONNECTION_COMPONENT_DEF(1,topology_def)
 
-    /* virtio con multiplexer */
-    maybe uses VirtQueueDev recv1;
-    maybe uses VirtQueueDrv send1;
-}
+//     /* virtio con multiplexer */
+//     maybe uses VirtQueueDev recv1;
+//     maybe uses VirtQueueDrv send1;
+// }
 
-component Init2 {
-    dataport Buf(SHARED_BUFSIZE) dp20;
-    dataport Buf(SHARED_BUFSIZE) dp21;
-    dataport Buf(SHARED_BUFSIZE) dp23;
-    VM_INIT_DEF()
-    VM_INIT_SATA()
-    VM_CONNECTION_COMPONENT_DEF(2,topology_def)
+// component Init2 {
+//     dataport Buf(SHARED_BUFSIZE) dp20;
+//     dataport Buf(SHARED_BUFSIZE) dp21;
+//     dataport Buf(SHARED_BUFSIZE) dp23;
+//     VM_INIT_DEF()
+//     VM_INIT_SATA()
+//     VM_CONNECTION_COMPONENT_DEF(2,topology_def)
 
-    /* virtio vsock */
-    maybe uses VirtQueueDev recv1;
-    maybe uses VirtQueueDrv send1;
-}
+//     /* virtio vsock */
+//     maybe uses VirtQueueDev recv1;
+//     maybe uses VirtQueueDrv send1;
+// }
 
-component Init3 {
-    dataport Buf(SHARED_BUFSIZE) dp30;
-    dataport Buf(SHARED_BUFSIZE) dp31;
-    dataport Buf(SHARED_BUFSIZE) dp32;
-    VM_INIT_DEF()
-    VM_CONNECTION_COMPONENT_DEF(3,topology_def)
+// component Init3 {
+//     dataport Buf(SHARED_BUFSIZE) dp30;
+//     dataport Buf(SHARED_BUFSIZE) dp31;
+//     dataport Buf(SHARED_BUFSIZE) dp32;
+//     VM_INIT_DEF()
+//     VM_CONNECTION_COMPONENT_DEF(3,topology_def)
 
-    /* virtio vsock */
-    maybe uses VirtQueueDev recv1;
-    maybe uses VirtQueueDrv send1;
-}
+//     /* virtio vsock */
+//     maybe uses VirtQueueDev recv1;
+//     maybe uses VirtQueueDrv send1;
+// }
 
 assembly {
     composition {
@@ -121,31 +121,31 @@ assembly {
         VM_PER_VM_COMP_DEF(0)
         VM_SATA_CONNECTIONS(0)
 
-        VM_PER_VM_COMP_DEF(1)
-        VM_SATA_CONNECTIONS(1)
+        // VM_PER_VM_COMP_DEF(1)
+        // VM_SATA_CONNECTIONS(1)
 
-        VM_PER_VM_COMP_DEF(2)
-        VM_SATA_CONNECTIONS(2)
+        // VM_PER_VM_COMP_DEF(2)
+        // VM_SATA_CONNECTIONS(2)
 
-        VM_PER_VM_COMP_DEF(3)
+        // VM_PER_VM_COMP_DEF(3)
 
-        component VirtQueueInit init;
-        VM_CONNECTION_CONNECT_VMS(init.init, topology_def)
+        // component VirtQueueInit init;
+        // VM_CONNECTION_CONNECT_VMS(init.init, topology_def)
 
-        connection seL4SharedDataWithCaps cross_vm_conn_01(from vm0.dp01, to vm1.dp10);
-        connection seL4SharedDataWithCaps cross_vm_conn_02(from vm0.dp02, to vm2.dp20);
-        connection seL4SharedDataWithCaps cross_vm_conn_03(from vm0.dp03, to vm3.dp30);
+        // connection seL4SharedDataWithCaps cross_vm_conn_01(from vm0.dp01, to vm1.dp10);
+        // connection seL4SharedDataWithCaps cross_vm_conn_02(from vm0.dp02, to vm2.dp20);
+        // connection seL4SharedDataWithCaps cross_vm_conn_03(from vm0.dp03, to vm3.dp30);
 
-        connection seL4SharedDataWithCaps cross_vm_conn_12(from vm1.dp12, to vm2.dp21);
-        connection seL4SharedDataWithCaps cross_vm_conn_13(from vm1.dp13, to vm3.dp31);
+        // connection seL4SharedDataWithCaps cross_vm_conn_12(from vm1.dp12, to vm2.dp21);
+        // connection seL4SharedDataWithCaps cross_vm_conn_13(from vm1.dp13, to vm3.dp31);
 
-        connection seL4SharedDataWithCaps cross_vm_conn_23(from vm2.dp23, to vm3.dp32);
+        // connection seL4SharedDataWithCaps cross_vm_conn_23(from vm2.dp23, to vm3.dp32);
 
-        component VirtQueueInit vsock_vm2_vm3;
-        connection seL4VirtQueues vsock_vm2_vm3_conn(to vsock_vm2_vm3.init, from vm3.recv1, from vm3.send1, from vm2.recv1, from vm2.send1);
+        // component VirtQueueInit vsock_vm2_vm3;
+        // connection seL4VirtQueues vsock_vm2_vm3_conn(to vsock_vm2_vm3.init, from vm3.recv1, from vm3.send1, from vm2.recv1, from vm2.send1);
 
-        component VirtQueueInit hvc_vm0_vm1;
-        connection seL4VirtQueues hvc_vm0_vm1_conn(to hvc_vm0_vm1.init, from vm0.recv1, from vm0.send1, from vm1.send1, from vm1.recv1);
+        // component VirtQueueInit hvc_vm0_vm1;
+        // connection seL4VirtQueues hvc_vm0_vm1_conn(to hvc_vm0_vm1.init, from vm0.recv1, from vm0.send1, from vm1.send1, from vm1.recv1);
     }
 
     configuration {
@@ -179,80 +179,80 @@ assembly {
 
 
         vm0.init_cons = [
-            VM_CONNECTION_INIT_HANDLER(0,topology_def),
+            // VM_CONNECTION_INIT_HANDLER(0,topology_def),
             {"init":"make_virtio_blk"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
+            // {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
             {"init":"make_virtio_con"},
         ];
 
-        VM_PER_VM_CONFIG_DEF(1)
-        vm1.simple_untyped25_pool = 95;
-        vm1.heap_size = 0x2000000;
-        vm1.guest_ram_mb = 1900;
-        vm1.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
-        vm1.kernel_image = "bzimage";
-        vm1.kernel_relocs = "bzimage";
-        vm1.initrd_image = "rootfs.cpio";
-        vm1.iospace_domain = 0x10;
-        vm1.pci_devices_iospace = 2;
-        vm1.sataserver_iface_attributes = "1";
-        vm1.sataserver_iface_partitions = [2];  /* Physical Partition assigned to VM1 */
+        // VM_PER_VM_CONFIG_DEF(1)
+        // vm1.simple_untyped25_pool = 95;
+        // vm1.heap_size = 0x2000000;
+        // vm1.guest_ram_mb = 1900;
+        // vm1.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
+        // vm1.kernel_image = "bzimage";
+        // vm1.kernel_relocs = "bzimage";
+        // vm1.initrd_image = "rootfs.cpio";
+        // vm1.iospace_domain = 0x10;
+        // vm1.pci_devices_iospace = 2;
+        // vm1.sataserver_iface_attributes = "1";
+        // vm1.sataserver_iface_partitions = [2];  /* Physical Partition assigned to VM1 */
 
-        vm1.init_cons = [
-            VM_CONNECTION_INIT_HANDLER(1,topology_def),
-            {"init":"make_virtio_blk"},
-            {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
-            {"init":"make_virtio_con"},
-        ];
+        // vm1.init_cons = [
+        //     VM_CONNECTION_INIT_HANDLER(1,topology_def),
+        //     {"init":"make_virtio_blk"},
+        //     {"init":"make_virtio_con_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_serial_console"},
+        //     {"init":"make_virtio_con"},
+        // ];
 
-        VM_PER_VM_CONFIG_DEF(2)
-        vm2.simple_untyped25_pool = 95;
-        vm2.heap_size = 0x2000000;
-        vm2.guest_ram_mb = 1900;
-        vm2.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
-        vm2.kernel_image = "bzimage";
-        vm2.kernel_relocs = "bzimage";
-        vm2.initrd_image = "rootfs.cpio";
-        vm2.iospace_domain = 0x11;
-        vm2.pci_devices_iospace = 3;
-        vm2.sataserver_iface_attributes = "2";
-        vm2.sataserver_iface_partitions = [3];  /* Physical Partition assigned to VM2 */
-        vm2.guest_cid = VM2_CID;
-        vm2.socket_layout = [{
-            "cid": VM3_CID,
-            "recv_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 0,
-            "send_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 1
-        }];
+        // VM_PER_VM_CONFIG_DEF(2)
+        // vm2.simple_untyped25_pool = 95;
+        // vm2.heap_size = 0x2000000;
+        // vm2.guest_ram_mb = 1900;
+        // vm2.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
+        // vm2.kernel_image = "bzimage";
+        // vm2.kernel_relocs = "bzimage";
+        // vm2.initrd_image = "rootfs.cpio";
+        // vm2.iospace_domain = 0x11;
+        // vm2.pci_devices_iospace = 3;
+        // vm2.sataserver_iface_attributes = "2";
+        // vm2.sataserver_iface_partitions = [3];  /* Physical Partition assigned to VM2 */
+        // vm2.guest_cid = VM2_CID;
+        // vm2.socket_layout = [{
+        //     "cid": VM3_CID,
+        //     "recv_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 0,
+        //     "send_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 1
+        // }];
 
-        vm2.init_cons = [
-            VM_CONNECTION_INIT_HANDLER(2,topology_def),
-            {"init":"make_virtio_blk"},
-            {"init":"make_virtio_vsock_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_vsock_irq"},
-            {"init":"make_virtio_vsock"}
-        ];
+        // vm2.init_cons = [
+        //     VM_CONNECTION_INIT_HANDLER(2,topology_def),
+        //     {"init":"make_virtio_blk"},
+        //     {"init":"make_virtio_vsock_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_vsock_irq"},
+        //     {"init":"make_virtio_vsock"}
+        // ];
 
-        VM_PER_VM_CONFIG_DEF(3)
-        vm3.simple_untyped25_pool = 95;
-        vm3.heap_size = 0x2000000;
-        vm3.guest_ram_mb = 1900;
-        vm3.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
-        vm3.kernel_image = "bzimage";
-        vm3.kernel_relocs = "bzimage";
-        vm3.initrd_image = "rootfs.cpio";
-        vm3.iospace_domain = 0x12;
-        vm3.pci_devices_iospace = 4;
-        vm3.guest_cid = VM3_CID;
-        vm3.socket_layout = [{
-            "cid": VM2_CID,
-            "recv_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 0,
-            "send_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 1
-        }];
+        // VM_PER_VM_CONFIG_DEF(3)
+        // vm3.simple_untyped25_pool = 95;
+        // vm3.heap_size = 0x2000000;
+        // vm3.guest_ram_mb = 1900;
+        // vm3.kernel_cmdline = VM_GUEST_CMDLINE_SHUTUP;
+        // vm3.kernel_image = "bzimage";
+        // vm3.kernel_relocs = "bzimage";
+        // vm3.initrd_image = "rootfs.cpio";
+        // vm3.iospace_domain = 0x12;
+        // vm3.pci_devices_iospace = 4;
+        // vm3.guest_cid = VM3_CID;
+        // vm3.socket_layout = [{
+        //     "cid": VM2_CID,
+        //     "recv_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 0,
+        //     "send_id": VM_VIRTIOVSOCK_VIRTQ_ID_START + 1
+        // }];
 
-        vm3.init_cons = [
-            VM_CONNECTION_INIT_HANDLER(3,topology_def),
-            {"init":"make_virtio_vsock_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_vsock_irq"},
-            {"init":"make_virtio_vsock"}
-        ];
+        // vm3.init_cons = [
+        //     VM_CONNECTION_INIT_HANDLER(3,topology_def),
+        //     {"init":"make_virtio_vsock_driver_dummy", "badge":"recv1_notification_badge()", "irq":"handle_vsock_irq"},
+        //     {"init":"make_virtio_vsock"}
+        // ];
 
         // Hardware details of the passthrough Ethernet device
         vm0.vm_ioports = [
@@ -291,46 +291,46 @@ assembly {
             },
         ];
 
-        /* Indexes correspond to port numbers in the VM layout arrays */
-        vm0.serial_layout = [
-            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
-        ];
+        // /* Indexes correspond to port numbers in the VM layout arrays */
+        // vm0.serial_layout = [
+        //     {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
+        // ];
 
-        vm1.serial_layout = [
-            {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
-        ];
+        // vm1.serial_layout = [
+        //     {"recv_id": VM_VIRTIOCON_VIRTQ_ID_START + 0, "send_id": VM_VIRTIOCON_VIRTQ_ID_START + 1},
+        // ];
 
-        /* VM0 virtqueue config */
-        vm0.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm0.recv1_shmem_size = 0x1000;
-        vm0.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm0.send1_shmem_size = 0x1000;
+        // /* VM0 virtqueue config */
+        // vm0.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
+        // vm0.recv1_shmem_size = 0x1000;
+        // vm0.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
+        // vm0.send1_shmem_size = 0x1000;
 
-        /* VM1 virtqueue config */
-        vm1.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
-        vm1.recv1_shmem_size = 0x1000;
-        vm1.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
-        vm1.send1_shmem_size = 0x1000;
+        // /* VM1 virtqueue config */
+        // vm1.recv1_id = VM_VIRTIOCON_VIRTQ_ID_START + 0;
+        // vm1.recv1_shmem_size = 0x1000;
+        // vm1.send1_id = VM_VIRTIOCON_VIRTQ_ID_START + 1;
+        // vm1.send1_shmem_size = 0x1000;
 
-        /* VM2 virtqueue config */
-        vm2.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
-        vm2.recv1_shmem_size = 0x2000;
-        vm2.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
-        vm2.send1_shmem_size = 0x2000;
+        // /* VM2 virtqueue config */
+        // vm2.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
+        // vm2.recv1_shmem_size = 0x2000;
+        // vm2.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
+        // vm2.send1_shmem_size = 0x2000;
 
-        /* VM3 virtqueue config */
-        vm3.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
-        vm3.recv1_shmem_size = 0x2000;
-        vm3.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
-        vm3.send1_shmem_size = 0x2000;
-
-
-        /* Virtqueue Topology */
-        hvc_vm0_vm1.init_topology = [{ "drv" : "vm0.send1", "dev" : "vm1.recv1"},
-                                     { "drv" : "vm1.send1", "dev" : "vm0.recv1"}];
+        // /* VM3 virtqueue config */
+        // vm3.recv1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 0;
+        // vm3.recv1_shmem_size = 0x2000;
+        // vm3.send1_id = VM_VIRTIOVSOCK_VIRTQ_ID_START + 1;
+        // vm3.send1_shmem_size = 0x2000;
 
 
-        vsock_vm2_vm3.init_topology = [{ "drv" : "vm2.send1", "dev" : "vm3.recv1"},
-                                       { "drv" : "vm3.send1", "dev" : "vm2.recv1"}];
+        // /* Virtqueue Topology */
+        // hvc_vm0_vm1.init_topology = [{ "drv" : "vm0.send1", "dev" : "vm1.recv1"},
+        //                              { "drv" : "vm1.send1", "dev" : "vm0.recv1"}];
+
+
+        // vsock_vm2_vm3.init_topology = [{ "drv" : "vm2.send1", "dev" : "vm3.recv1"},
+        //                                { "drv" : "vm3.send1", "dev" : "vm2.recv1"}];
     }
 }
