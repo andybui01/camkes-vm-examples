@@ -285,9 +285,9 @@ assembly {
             // {"name":"Ethernet-vm0-Irq", "ioapic":1, "source":5, "level_trig":1, "active_low":1, "dest":11},
             {
                 "name":"Ethernet-vm0-Irq",
-                "pci_bus":0x66, "pci_dev":0x0, "pci_fun":0x0, /* @andyb: find a way to avoid duplicating pci_devices */
-                "dest":16, /** @andyb: linux decides the vector is 16, 0-15 is guest VM PIC, 16 onwards is LAPIC*/
-                "handle":0
+                "pci_irq_line":11,
+                "source":16, /* MSIs feed into the APIC, which starts at irq=16 in the VMM */
+                "handle":0 /* Unused value in seL4 MSI API */
             },
         ];
 
