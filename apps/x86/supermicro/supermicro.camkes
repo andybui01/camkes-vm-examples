@@ -1,0 +1,80 @@
+/*
+ * Copyright 2022, UNSW (ABN 57 195 873 179)
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+import <VM/vm.camkes>;
+
+#include <configurations/vm.h>
+
+#define VM_GUEST_CMDLINE "earlyprintk=ttyS0,115200 console=ttyS0,115200 root=/dev/mem i8042.nokbd=iy \
+i8042.nomux=y i8042.noaux=y io_delay=udelay noisapnp apic=debug loglevel=7 lapic=notscdeadline noapic"
+
+/* Config notes
+ *
+ * Ensure you have the right Linux configuration options set. PCI_MSI, IOAPIC unselected, etc.
+ * 
+ * Pass in "noapic", which skips the _ioapic_ setup, not the apic (lol what).
+ * This is needed right now in order for Linux to complete apic setup.
+ */
+
+/* Sample usage of the ethernet device
+* $ ip link set up dev eth0
+* $ udhcpc -i eth0
+*
+* # test to see if interrupts are actually coming in (just spam this lol)
+* $ cat /proc/interrupts
+*/
+
+component Init0 {
+    VM_INIT_DEF()
+}
+
+assembly {
+    composition {
+        VM_COMPOSITION_DEF()
+        VM_PER_VM_COMP_DEF(0)
+    }
+
+    configuration {
+        VM_CONFIGURATION_DEF()
+        VM_PER_VM_CONFIG_DEF(0)
+
+        vm0.simple_untyped25_pool = 95;
+        vm0.heap_size = 0x2000000;
+        vm0.guest_ram_mb = 1900;
+        vm0.kernel_cmdline = VM_GUEST_CMDLINE;
+        vm0.kernel_image = "bzimage";
+        vm0.kernel_relocs = "bzimage";
+        vm0.initrd_image = "rootfs.cpio";
+        vm0.iospace_domain = 0x0f;
+        vm0.pci_devices_iospace = 1;
+
+        // Hardware details of the passthrough Ethernet device
+        vm0.vm_ioports = [
+            {"start":0xa060, "end":0xa060 + 32, "pci_device":0, "name":"Ethernet-vm0"},
+        ];
+
+        vm0.pci_devices = [
+            {
+                "name":"Ethernet-vm0",
+                "bus":0x66, "dev":0x0, "fun":0x0,
+                "irq":"Ethernet-vm0-Irq",
+                "memory":[
+                    {"paddr":0xe0d60000, "size":0x20000, "page_bits":12},
+                    {"paddr":0xe0d8c000, "size":0x4000, "page_bits":12},
+                ],
+            },
+        ];
+
+        vm0.vm_irqs = [
+            {
+                "name":"Ethernet-vm0-Irq",
+                "pci_irq_line":11,
+                "source":16, /* MSIs feed into the APIC, which starts at irq=16 in the VMM */
+                "handle":0 /* Unused value in seL4 MSI API */
+            },
+        ];
+    }
+}
